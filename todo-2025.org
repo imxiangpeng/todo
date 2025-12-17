@@ -1,8 +1,15 @@
-* Inbox
-** TODO 安徽广电代码以及编译
+* DONE Inbox
+CLOSED: [2025-12-16 Tue 05:09]
 
+** TODO 安徽广电代码以及编译
 ** TODO 中国移动插入式设备集采
 SCHEDULED: <2025-12-15 Mon>
+
 ** TODO 重庆广电 DVB 方案
 SCHEDULED: <2025-12-15 Mon>
+
 [[id:c85f08f3-c8a3-4107-b9a2-acf4548a207f][重庆广电 DVB 方案]]
+
+* DONE 重庆广电DVB版本杜比需求？
+CLOSED: [2025-12-16 Tue 05:09]
+
