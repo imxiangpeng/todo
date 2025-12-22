@@ -36,3 +36,13 @@ SCHEDULED: <2025-12-22 Mon>
 * TODO 重庆广电 NGB-J接口可行性
 SCHEDULED: <2025-12-22 Mon>
 
+找国科确认NGB-J接口完整性以及DVB相关功能支持情况
+
+自己android版本评估NGB-J稳定性
+
+* TODO 移动集采移动框架中含有终端管理应用模块 STBManager (与tr069不同，海思空实现)
+SCHEDULED: <2025-12-22 Mon>
+
+* TODO 重庆广电设置接口问题
+SCHEDULED: <2025-12-22 Mon>
+
