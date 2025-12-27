@@ -46,3 +46,19 @@ SCHEDULED: <2025-12-22 Mon>
 * TODO 重庆广电设置接口问题
 SCHEDULED: <2025-12-22 Mon>
 
+* TODO 山东语音在播放界面识别阶段存在无法显示的问题
+SCHEDULED: <2025-12-27 Sat>
+
+1 播放情况下基本必现，例如本地播放等
+2 茁壮平台无问题，但是本地播放一样存在问题
+3 dumpsys SurfaceFlinger  以及HWC
+4 screenrecord/screencap
+5 新版app放到310板子上没问题，旧版app放到320上也可以显示(与语音)
+
+6 logcat surfaceflinger  hwc
+
+
+
+
+
+
