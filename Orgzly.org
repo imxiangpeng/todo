@@ -58,6 +58,76 @@ SCHEDULED: <2025-12-29 Mon>
 6 logcat surfaceflinger  hwc
 
 
+hwc HI_FB -   HI_GFBG
+
+ro.config.gfx2d_compress
+
+
+
+
+
+
+
+* TODO 媒体服务器 wvp+zlmediakit
+SCHEDULED: <2025-12-29 Mon>
+
+https://github.com/648540858/wvp-GB28181-pro
+
+
+https://gitee.com/pan648540858/wvp-GB28181-pro
+
+
+https://github.com/ZLMediaKit/ZLMediaKit
+
+
+https://mp.weixin.qq.com/s/wJJtFu9Kp9N70I4LEXBOJQ
+
+
+https://mp.weixin.qq.com/s/sdJk8Aj56iIwODXvmcqvyQ
+
+
+ABLMediaServer 可以替代 ZLMediaKit；文档更详细，更容易入手；
+ry-wvp 可以替代wvp
+
+
+流媒体我只推荐mediamtx
+
+https://github.com/bluenviron/mediamtx
+
+
+
+
+https://mp.weixin.qq.com/s/vRMoV2ePbIfZvm5wOGRr2g
+
+
+
+
+
+https://mp.weixin.qq.com/s/4bqtmF242efDcbAPchuZEQ
+
+
+一个RK3588方案
+
+https://wiki.t-firefly.com/zh_CN/iCore-3588JQ/linux_compile.html
+
+
+firefly aibox 方案
+
+https://www.t-firefly.com/wiki
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
