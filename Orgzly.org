@@ -1,5 +1,9 @@
-* TODO AI中屏研发评估
+* WAIT AI中屏研发评估
 SCHEDULED: <2025-12-22 Mon>
+
+#+begin_quote
+建议：相关工作都交由椰壳来完成
+#+end_quote
 
 驱动由椰壳实现
 蓝牙音响功能，作为device设备，工作量可能略多一些
@@ -30,21 +34,30 @@ AI智能体对接
 
 
 
-* TODO 梯慧眼云平台APP接口与联通DMP平台接口差异
-SCHEDULED: <2025-12-22 Mon>
+* DONE 梯慧眼云平台APP接口与联通DMP平台接口差异
+CLOSED: [2025-12-29 Mon 08:47] SCHEDULED: <2025-12-22 Mon>
 
-* TODO 重庆广电 NGB-J接口可行性
-SCHEDULED: <2025-12-22 Mon>
+我们云平台仿造阿里规范标准实现。
+
+所以，与联通 DMP 的还是有挺大差异的。
+* KILL 重庆广电 NGB-J接口可行性
+CLOSED: [2025-12-29 Mon 09:04] SCHEDULED: <2025-12-22 Mon>
+
+#+begin_quote
+已经否定，跟新光确认歌华也没有使用 NGB-J 接口，塞科调用的是qin 接口。
+
+跟重庆沟通他们会整理之前 mstar 项目使用的 porting 接口由我们来实现。
+
+#+end_quote
 
 找国科确认NGB-J接口完整性以及DVB相关功能支持情况
 
 自己android版本评估NGB-J稳定性
 
-* TODO 移动集采移动框架中含有终端管理应用模块 STBManager (与tr069不同，海思空实现)
-SCHEDULED: <2025-12-22 Mon>
+* DONE 移动集采移动框架中含有终端管理应用模块 STBManager (与tr069不同，海思空实现)
+CLOSED: [2025-12-29 Mon 09:05] SCHEDULED: <2025-12-22 Mon>
 
-* TODO 重庆广电设置接口问题
-SCHEDULED: <2025-12-22 Mon>
+这个不是 TR069 而是框架里面终端管理应用的， amlogic 平台代码中有实现逻辑
 
 * TODO 山东语音在播放界面识别阶段存在无法显示的问题
 SCHEDULED: <2025-12-29 Mon>
@@ -117,23 +130,9 @@ https://www.t-firefly.com/wiki
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-* TODO tunnelto tailscale cloudflared
-SCHEDULED: <2025-12-29 Mon>
+* DONE tunnelto tailscale cloudflared
+CLOSED: [2025-12-29 Mon 08:53] SCHEDULED: <2025-12-29 Mon>
 
 https://github.com/agrinman/tunnelto
 
+tunnelto 应该并不怎么样，
