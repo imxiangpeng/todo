@@ -81,6 +81,7 @@ Surfaceflinger window activity
 
 在语音没有提示情况下，通过input keyevent KEYCODE_VOLUNE_DOWN调出音量条，就可以看到都立马显示出来了
 
+参考： [[https://hisupport.hisilicon.com/hisupport/#!services/workflow/instance/myapplication/18701652?jalorNode=myApplication][HSCP2025122666957]]
 
 * TODO 媒体服务器 wvp+zlmediakit
 SCHEDULED: <2025-12-29 Mon>
