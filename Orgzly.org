@@ -141,3 +141,14 @@ SCHEDULED: <2026-01-05 Mon>
 
 mvp or ruyi vue pro
 
+* TODO 更新卡尔曼文章链接
+SCHEDULED: <2026-01-05 Mon>
+
+How a Kalman filter works, in pictures
+
+
+https://www.bzarg.com/p/how-a-kalman-filter-works-in-pictures/
+
+
+
+
