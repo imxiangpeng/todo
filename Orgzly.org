@@ -83,8 +83,8 @@ Surfaceflinger window activity
 
 参考： [[https://hisupport.hisilicon.com/hisupport/#!services/workflow/instance/myapplication/18701652?jalorNode=myApplication][HSCP2025122666957]] (alpha检测误判引起)
 
-* TODO 媒体服务器 wvp+zlmediakit
-SCHEDULED: <2025-12-29 Mon>
+* DONE 媒体服务器 wvp+zlmediakit
+CLOSED: [2026-01-08 Thu 09:41] SCHEDULED: <2025-12-29 Mon>
 
 https://github.com/648540858/wvp-GB28181-pro
 
