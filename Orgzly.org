@@ -57,8 +57,8 @@ CLOSED: [2025-12-29 Mon 09:05] SCHEDULED: <2025-12-22 Mon>
 
 这个不是 TR069 而是框架里面终端管理应用的， amlogic 平台代码中有实现逻辑
 
-* TODO 山东语音在播放界面识别阶段存在无法显示的问题
-SCHEDULED: <2025-12-29 Mon>
+* DONE 山东语音在播放界面识别阶段存在无法显示的问题
+CLOSED: [2026-01-07 Wed 11:36] SCHEDULED: <2025-12-29 Mon>
 
 1 播放情况下基本必现，例如本地播放等
 2 茁壮平台无问题，但是本地播放一样存在问题
@@ -81,7 +81,7 @@ Surfaceflinger window activity
 
 在语音没有提示情况下，通过input keyevent KEYCODE_VOLUNE_DOWN调出音量条，就可以看到都立马显示出来了
 
-参考： [[https://hisupport.hisilicon.com/hisupport/#!services/workflow/instance/myapplication/18701652?jalorNode=myApplication][HSCP2025122666957]]
+参考： [[https://hisupport.hisilicon.com/hisupport/#!services/workflow/instance/myapplication/18701652?jalorNode=myApplication][HSCP2025122666957]] (alpha检测误判引起)
 
 * TODO 媒体服务器 wvp+zlmediakit
 SCHEDULED: <2025-12-29 Mon>
@@ -137,13 +137,13 @@ https://github.com/agrinman/tunnelto
 
 tunnelto 应该并不怎么样，
 
-* TODO rk3588 ffmpeg 硬解 zlmediakit部署
+* TODO [#A] rk3588 ffmpeg 硬解 zlmediakit部署
 SCHEDULED: <2026-01-05 Mon>
 
-mvp or ruyi vue pro
+mvp or ruyi vue pro srs
 
-* TODO 更新卡尔曼文章链接
-SCHEDULED: <2026-01-05 Mon>
+* DONE 更新卡尔曼文章链接
+CLOSED: [2026-01-08 Thu 09:40] SCHEDULED: <2026-01-05 Mon>
 
 How a Kalman filter works, in pictures
 
