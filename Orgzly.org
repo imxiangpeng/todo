@@ -137,8 +137,8 @@ https://github.com/agrinman/tunnelto
 
 tunnelto 应该并不怎么样，
 
-* TODO [#A] rk3588 ffmpeg 硬解 zlmediakit部署
-SCHEDULED: <2026-01-05 Mon>
+* DONE [#A] rk3588 ffmpeg 硬解 zlmediakit部署
+CLOSED: [2026-01-13 Tue 13:33] SCHEDULED: <2026-01-05 Mon>
 
 mvp or ruyi vue pro srs
 
