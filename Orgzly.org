@@ -150,6 +150,132 @@ How a Kalman filter works, in pictures
 
 https://www.bzarg.com/p/how-a-kalman-filter-works-in-pictures/
 
+* TODO rk3588多路抽帧解码
+SCHEDULED: <2026-01-17 Sat>
+
+4. 这种方案的极限在哪里？
+​虽然这种方案很强，但你还需要关注一个参数：内存 (RAM)。
+​每一个解码器实例，即使它在等待 I 帧，也会预先分配一定的输入/输出缓存（Buffer Pool）。
+​如果你开了 128 路，每路预留 5 个 1080P 的 Buffer，即便不解码，光占用的显存可能就会耗尽 8GB/16GB 的内存。
+​建议技巧： 在创建 MPP 实例时，通过配置 MPP_DEC_SET_EXT_BUF_GROUP 限制每一路解码器的 Buffer 数量。对于只需要识别单帧的应用，可以将 Buffer 限制在最小（如 2-3 个），这样可以极大增加路数上限。
 
 
+
+
+
+
+
+
+在 GStreamer 方案中，实现“只解码关键帧（I帧）”主要有两种思路：一种是使用 identity 插件过滤数据包标志位，另一种是利用 mppvideodec 的底层属性（如果你的固件版本支持）。
+最推荐的方法是在解码器之前拦截非关键帧。
+1. 命令行方案：使用 identity 过滤
+在 GStreamer 的 Buffer 中，每一个数据包都有一个 delta-unit 标志。如果该标志为 True，说明它是一个非关键帧（P/B帧）。通过 identity 插件的 drop-buffer-flags 属性，我们可以直接在进入解码器前把它们丢掉。
+gst-launch-1.0 rtspsrc location=rtsp://... ! rtph264depay ! h264parse ! \
+    identity drop-buffer-flags=0x00002000 ! \
+    mppvideodec ! \
+    videoconvert ! rkximagesink
+
+ * 关键点： 0x00002000 是 GST_BUFFER_FLAG_DELTA_UNIT 的十六进制值。
+ * 效果： h264parse 会为每个帧打上标签，identity 看到非关键帧就直接丢弃。这样 mppvideodec 拿到的全是 I 帧。
+2. 进阶方案：使用 mppvideodec 的 skip-frames (依赖版本)
+如果你使用的是较新版本的瑞芯微 GStreamer 插件（如 gstreamer-rockchip），有些版本已经将底层的 skip_frames 功能暴露出来了。你可以通过 gst-inspect-1.0 mppvideodec 检查是否有该属性。
+# 如果支持 skip-frames 属性
+gst-launch-1.0 ... ! mppvideodec skip-frames=2 ! ...
+
+ * 参数含义：
+   * 0: 解码所有帧 (All)
+   * 1: 跳过非参考帧 (Non-ref)
+   * 2: 只解码关键帧 (Keyframes Only)
+3. C++ 代码方案：使用 Probe（探针）过滤
+如果你是在 C++ 里写 GStreamer 代码，最稳妥、最灵活的方法是在 h264parse 的输出 Pad 上挂一个 Pad Probe。
+static GstPadProbeReturn pipe_probe_cb(GstPad *pad, GstPadProbeInfo *info, gpointer user_data) {
+    GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER(info);
+    
+    // 检查是否是增量单元（即非关键帧）
+    if (GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+        return GST_PAD_PROBE_DROP; // 丢弃该 Buffer，不传给下游解码器
+    }
+    
+    return GST_PAD_PROBE_OK;
+}
+
+// 在代码中关联 Probe
+GstElement *parser = gst_bin_get_by_name(GST_BIN(pipeline), "h264parse_element");
+GstPad *srcpad = gst_element_get_static_pad(parser, "src");
+gst_pad_add_probe(srcpad, GST_PAD_PROBE_TYPE_BUFFER, pipe_probe_cb, NULL, NULL);
+
+4. 方案对比建议
+| 方案 | 优点 | 缺点 | 适用场景 |
+|---|---|---|---|
+| identity 命令行 | 极简，无需写代码 | 只能处理简单的 Buffer 标记 | 快速验证、简单预览 |
+| skip-frames 属性 | 效率最高，底层原生支持 | 依赖特定的固件和驱动版本 | 如果驱动支持，这是首选 |
+| C++ Pad Probe | 最灵活，可根据业务精确控制 | 需要写少量 C++ 代码 | 正式项目、AI 识别工程 |
+为什么这样做可以实现“路数复用”？
+当你用上述方案把 P/B 帧过滤掉后，解码器的负载会瞬间降低 90% 以上（假设 GOP=30，你每秒只解 1 帧）。虽然你开了 128 路 mppvideodec 实例，但 VPU 硬件在 96% 的时间里都是闲置的。
+需要注意的是： 这样做之后，输出的画面会像幻灯片一样跳转（每秒跳一下），但这正是 AI 识别（如车辆检测、人流统计）最理想的输入方式。
+你现在的 GStreamer 环境是 Ubuntu 还是 Debian？我可以帮你确认一下 mppvideodec 的属性版本。
+
+
+
+
+* TODO gstreamer分叉管道在正常解码情况下，能否实现，解码数据实时显示，然后每隔5帧送给npu推理一次呢？
+SCHEDULED: <2026-01-17 Sat>
+
+完全可以实现。这种需求在安防和边缘计算中非常典型：显示端需要流畅度（实时解码），识别端需要效率（抽帧推理）。
+在 GStreamer 中，这种结构被称为**“分叉管道（Tee Pipeline）”**。你可以把解码后的 YUV 数据流一分为二：一波送去显示，另一波抽帧后喂给 NPU。
+1. 技术方案：tee + videorate
+ * tee： 负责将数据流复制成两个分支。
+ * videorate： 负责在推理分支降低帧率（例如从 30fps 降到 6fps，即每 5 帧取 1 帧）。
+ * queue： 必须在每个分支开始处加一个队列，防止推理端的卡顿影响到显示端的流畅。
+2. C++ 核心代码实现
+#include <gst/gst.h>
+#include <iostream>
+
+int main(int argc, char *argv[]) {
+    gst_init(&argc, &argv);
+
+    // 构建 Pipeline 字符串
+    // 分支 1 (Display): 直接显示，保持 30fps
+    // 分支 2 (Inference): 通过 videorate 降为 5/1 帧，由 appsink 接收
+    std::string pipeline_str = 
+        "rtspsrc location=rtsp://your_url latency=100 ! rtph264depay ! h264parse ! mppvideodec ! "
+        "tee name=t "
+        "t. ! queue ! rkximagesink sync=false "  // 显示分支
+        "t. ! queue ! videorate ! video/x-raw,framerate=5/1 ! " // 推理分支：抽帧
+        "rockchiprga ! video/x-raw,format=RGB,width=640,height=640 ! "
+        "appsink name=my_sink emit-signals=true max-buffers=1 drop=true";
+
+    GError *error = NULL;
+    GstElement *pipeline = gst_parse_launch(pipeline_str.c_str(), &error);
+
+    // ... 省略 appsink 的回调连接和错误检查 (见上一个回答) ...
+
+    gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    
+    std::cout << "实时显示已启动，每 5 帧提取 1 帧进行 NPU 推理..." << std::endl;
+
+    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(loop);
+
+    return 0;
+}
+
+3. 为什么这个方案更优？
+| 特性 | 实现方式 | 优势 |
+|---|---|---|
+| 实时性 | rkximagesink sync=false | 渲染端不等待，保证画面零延迟预览。 |
+| 抽帧控制 | videorate | 自动根据时间戳平滑丢帧，即使码率波动，也能维持稳定的推理频率。 |
+| 隔离性 | queue | 推理分支如果因为 NPU 负载过高卡住了，显示分支依然会流畅运行，不会导致监控画面卡死。 |
+| 硬件加速 | rockchiprga | 推理分支的缩放和转 RGB 全部由 RGA 硬件完成，不占用解码器的预览性能。 |
+4. 专家级调优提示：
+ * Buffer 共享： 在 RK3588 上，mppvideodec 出来的 Buffer 默认是物理连续的（DMA-BUF）。tee 插件只是复制了指针（引用计数），并不会产生内存拷贝。所以即便开了分支，显存带宽压力也几乎没有增加。
+ * 同步问题： sync=false 在显示端很重要，它可以防止因为某路流时间戳异常导致整个 Pipeline 阻塞。
+这种方案下，128 路显然跑不动（因为 1080P 全量解码 128 路超出了 VPU 极限），但在 32 路 1080P 下，这是最完美的展示+分析架构。
+您是打算把这个逻辑集成到现有的监控客户端界面里吗？我可以提供如何将 rkximagesink 嵌入到特定窗口 ID (X11 Window ID) 的方法。
+
+
+* TODO EasyAIoT（云边端一体化智能算法应用平台）
+SCHEDULED: <2026-01-18 Sun>
+
+https://gitee.com/jiang4yu/easyaiot
 
