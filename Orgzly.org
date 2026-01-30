@@ -279,3 +279,74 @@ SCHEDULED: <2026-01-18 Sun>
 
 https://gitee.com/jiang4yu/easyaiot
 
+* TODO 周三梯慧眼云平台大量假离线软件问题原因说明
+SCHEDULED: <2026-01-23 Fri>
+
+* TODO 此芯交流
+SCHEDULED: <2026-01-27 Tue>
+
+应用场景
+算法
+生态，技术支持
+解决方案
+
+
+多开
+
+高通闭源
+
+
+16 pcie 槽
+
+系统丰富
+
+
+
+https://docs.radxa.com/orion/o6
+
+
+
+后摩
+
+天数智芯
+
+
+解决方案
+
+
+
+
+均胜机器人
+
+
+
+运营商
+
+
+
+
+
+
+
+
+
+
+
+
+* TODO Redroid 了解
+SCHEDULED: <2026-02-02 Mon>
+
+Redroid 简介
+Redroid 是一个基于 Android 的开源项目，是多个云手机方案中的一种，旨在为开发者和用户提供一个灵活的 Android 环境。它可以在不同的平台上运行，包括桌面操作系统，让用户能够体验 Android 系统的功能和应用。
+
+
+mkdir ~/redroid && cd ~/redroid
+repo init -u https://github.com/redroid-rockchip/platform_manifests.git -b redroid-12.0.0 --depth=1 --git-lfs
+repo sync -c
+sudo apt install git-lfs
+repo forall -g lfs -c git lfs pull
+
+
+
+https://docs.radxa.com/rock5/rock5b/app-development/redroid
+
