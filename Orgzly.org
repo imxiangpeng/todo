@@ -502,3 +502,74 @@ drive.mount('/content/drive')
 你需要我帮你写一段自动挂载 Google Drive 并保存权重的代码吗？
 
 
+* TODO 在yolo11源码中进行模型训练
+SCHEDULED: <2026-02-01 Sun>
+
+既然你已经下载了 YOLO11 的源码（通常是从 Ultralytics 的 GitHub 仓库克隆的），那么你的目标是进行源码开发级训练。这种方式方便你修改网络结构（.yaml 文件）或损失函数。
+以下是在 Colab 中基于源码环境进行训练的步骤：
+1. 准备源码环境
+首先，你需要进入源码目录并安装其依赖，这样系统会引用你下载的这套代码，而不是全局的 pip 包。
+# 1. 进入你下载或上传的 YOLO11 源码根目录
+# 假设你克隆到了 /content/ultralytics
+%cd /content/ultralytics
+
+# 2. 以可编辑模式安装（这一步很关键！）
+# -e 选项表示“开发模式”，对源码的修改会立即生效
+!pip install -e .
+
+2. 配置数据集
+由于你不在全局环境，建议将 data.yaml 中的路径写成绝对路径，避免源码路径层级嵌套导致的找不到文件。
+你可以手动编辑 data.yaml：
+train: /content/datasets/smoking/train/images
+val: /content/datasets/smoking/valid/images
+test: /content/datasets/smoking/test/images
+
+nc: 1
+names: ['smoking']
+
+3. 启动训练（通过源码脚本）
+在源码模式下，你有两种方式启动训练：
+方式 A：使用 main 入口脚本（推荐）
+在源码根目录下，你可以创建一个简单的 train.py 脚本：
+# train.py
+from ultralytics import ASSETS, YOLO
+
+# 加载 YOLO11 的预训练权重
+# 此时它会查找源码中相关的配置文件
+model = YOLO("yolo11m.pt") 
+
+if __name__ == '__main__':
+    model.train(
+        data="/content/datasets/data.yaml", # 你的数据集路径
+        epochs=100,
+        imgsz=640,
+        device=0,
+        project="my_smoking_project", # 结果保存的文件夹名
+        name="yolo11_smoking_run"
+    )
+
+然后在 Colab 单元格运行：
+!python train.py
+
+方式 B：通过命令行
+直接在源码目录下运行 CLI：
+!yolo task=detect mode=train model=yolo11m.pt data=/content/datasets/data.yaml epochs=100 imgsz=640
+
+4. 源码训练的进阶操作
+既然用了源码，你可能想做一些自定义：
+ * 修改网络结构：
+   你可以进入 ultralytics/cfg/models/11/yolo11.yaml 修改通道数或层数。训练时加载该配置文件即可：
+   model = YOLO("ultralytics/cfg/models/11/yolo11.yaml").load("yolo11m.pt")
+ * 修改超参数：
+   修改 ultralytics/cfg/default.yaml 中的 lr0 (学习率)、mosaic (数据增强系数) 等。
+5. 在 Colab 中防止数据丢失
+源码训练的结果默认会保存在源码目录下的 runs/ 文件夹。如果 Colab 断开，这些数据会丢失。建议将结果软连接到 Google Drive：
+from google.colab import drive
+drive.mount('/content/drive')
+
+# 创建一个软连接，将 runs 目录指向 Google Drive
+!ln -s /content/drive/MyDrive/yolo_results /content/ultralytics/runs
+
+你现在是已经把源码上传到 Colab 了，还是需要我提供克隆 GitHub 仓库并自动配置的命令？
+
+
