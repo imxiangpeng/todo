@@ -143,7 +143,7 @@ CLOSED: [2026-01-13 Tue 13:33] SCHEDULED: <2026-01-05 Mon>
 mvp or ruyi vue pro srs
 
 * DONE 更新卡尔曼文章链接
-CLOSED: [2026-01-08 Thu 09:40] SCHEDULED: <2026-01-05 Mon>
+CLOSED: [2026-01-08 Thu 09:40] DEADLINE: <2026-02-02 Mon> SCHEDULED: <2026-02-02 Mon>
 
 How a Kalman filter works, in pictures
 
@@ -349,4 +349,19 @@ repo forall -g lfs -c git lfs pull
 
 
 https://docs.radxa.com/rock5/rock5b/app-development/redroid
+
+* TODO 联通集采项目后续规划
+SCHEDULED: <2026-02-02 Mon>
+
+产测切换linux版本
+user版本
+
+
+* TODO rknn cpp multi thread infer 在3580达到140帧
+SCHEDULED: <2026-02-01 Sun>
+
+https://github.com/leafqycc/rknn-cpp-Multithreading
+
+
+
 
