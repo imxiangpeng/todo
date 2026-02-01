@@ -570,6 +570,51 @@ drive.mount('/content/drive')
 # 创建一个软连接，将 runs 目录指向 Google Drive
 !ln -s /content/drive/MyDrive/yolo_results /content/ultralytics/runs
 
-你现在是已经把源码上传到 Colab 了，还是需要我提供克隆 GitHub 仓库并自动配置的命令？
+在 YOLO 源码开发中，这两个 .yaml 文件扮演着完全不同的角色：一个是**“建筑蓝图”，另一个是“施工指南”**。
+1. yolo11.yaml：模型结构定义 (The Architecture)
+这个文件定义了神经网络的骨架。如果你想改变模型“长什么样”，就改这个文件。
+ * 它的位置： 通常在 ultralytics/cfg/models/11/yolo11.yaml。
+ * 主要功能：
+   * Backbone (骨干网络)： 定义了模型如何提取特征（使用的是什么样的卷积层、C3k2 模块等）。
+   * Head (检测头)： 定义了模型如何预测位置和类别，以及特征融合的路径（如 PANet 或 FPN）。
+   * Parameters： 定义了 nc (类别数，虽然通常在数据配置中指定) 和缩放因子（决定了是 n, s, m, l, x 中的哪一个）。
+ * 什么时候改它？
+   * 你想尝试精简模型以提升在嵌入式设备上的速度。
+   * 你想在网络中加入注意力机制（如 SE, CBAM）。
+   * 你想修改卷积核的大小或改变层数。
+2. default.yaml：全局超参数配置 (The Hyperparameters)
+这个文件定义了训练过程中的行为和规则。如果你想改变“怎么训练”，就改这个文件。
+ * 它的位置： 位于 ultralytics/cfg/default.yaml。
+ * 主要功能：
+   * 训练参数： 学习率 (lr0, lrf)、动量 (momentum)、权重衰减 (weight_decay)、训练轮数 (epochs)、批次大小 (batch)。
+   * 数据增强： 图像缩放 (scale)、平移 (translate)、翻转 (flipud)、马赛克增强 (mosaic)、混合增强 (mixup)。
+   * 推理/验证设置： 置信度阈值 (conf)、非极大值抑制 (iou)。
+ * 什么时候改它？
+   * 模型不收敛，需要调低或调高学习率。
+   * 过拟合严重，需要加大 mosaic 或 mixup 等增强手段。
+   * 你想固定所有训练任务的默认图像尺寸 (imgsz)。
+总结对比
+| 特性 | yolo11.yaml (结构) | default.yaml (超参数) |
+|---|---|---|
+| 核心比喻 | 汽车的发动机和底盘设计图 | 司机的驾驶手册和比赛规则 |
+| 定义内容 | 卷积层、残差块、下采样层、通道数 | 学习率、训练轮数、数据增强比例 |
+| 修改后果 | 改变了模型的参数量、计算量 (GFLOPs) | 改变了训练速度、收敛效果和最终精度 |
+| 调用方式 | model = YOLO("yolo11.yaml") | 自动被 model.train() 调用，也可传参覆盖 |
+💡 实用小贴士
+在 Colab 源码训练时，你不需要直接修改 default.yaml。
+虽然修改源码里的 default.yaml 也能生效，但更推荐的做法是在 model.train() 函数中传参，这样更灵活且不容易把源码改乱：
+# 这样做效果等同于修改了 default.yaml，但只对当前训练任务有效
+model.train(
+    data="data.yaml", 
+    epochs=100, 
+    lr0=0.01,    # 覆盖 default.yaml 中的初始学习率
+    mosaic=1.0   # 覆盖数据增强参数
+)
+
+你是打算尝试修改网络结构（比如加入注意力模块），还是主要想通过调整超参数来优化抽烟检测的效果？
+
+
+
+
 
 
