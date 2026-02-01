@@ -433,3 +433,72 @@ https://huggingface.co/Enos-123/smoking-detection?hl=zh-CN
 https://mp.weixin.qq.com/s/TZxmp_WvJ86MwSI3YC8cBQ
 
 
+* TODO 在colab上训练抽烟模型
+SCHEDULED: <2026-02-01 Sun>
+
+在 Google Colab 上训练 YOLOv8/v11 是一个非常明智的选择，因为你可以免费使用 NVIDIA T4 GPU。
+以下是专为 Colab 环境优化的全流程步骤，你可以直接复制到 Notebook 的单元格中运行：
+1. 环境准备 (GPU 加速)
+在 Colab 顶部菜单栏选择：修改 -> 笔记本设置 -> 硬件加速器 -> T4 GPU。
+# 检查 GPU 是否就绪
+!nvidia-smi
+
+# 安装 Ultralytics 库
+!pip install ultralytics
+
+2. 获取抽烟数据集
+在 Colab 中最快捷的方法是直接从 Roboflow 导入。
+操作步骤：
+ * 访问 Roboflow Smoking Detection Dataset。
+ * 点击 Download Dataset。
+ * 选择 YOLOv8 格式。
+ * 选择 show download code，复制那一串 Python 代码。
+在 Colab 中粘贴运行（示例代码）：
+!pip install roboflow
+from roboflow import Roboflow
+rf = Roboflow(api_key="你的API_KEY") # 替换为你自己的 Key
+project = rf.workspace("v-smooking").project("smoking-p61gu") # 这只是个例子
+dataset = project.version(1).download("yolov8")
+
+3. 开始训练
+我们直接调用 YOLOv8 的命令行工具。建议使用 Medium (m) 模型，因为它在小目标（香烟）检测上比 Nano (n) 稳定得多。
+from ultralytics import YOLO
+
+# 加载预训练的 YOLOv8m 权重
+model = YOLO('yolov8m.pt')
+
+# 开始训练
+# data=dataset.location + "/data.yaml" 会自动指向你刚刚下载的数据路径
+results = model.train(
+    data=f"{dataset.location}/data.yaml", 
+    epochs=100, 
+    imgsz=640, 
+    plots=True,
+    device=0  # 使用 GPU
+)
+
+4. 训练过程可视化
+Colab 会自动在 runs/detect/train/ 文件夹下生成训练日志。你可以运行以下代码查看准确率曲线：
+from IPython.display import Image, display
+display(Image(filename=f"runs/detect/train/results.png", width=600))
+
+5. 推理测试与下载权重
+训练完成后，模型效果最好的权重文件位于 runs/detect/train/weights/best.pt。
+测试一张图片：
+# 运行推理
+!yolo task=detect mode=predict model=runs/detect/train/weights/best.pt conf=0.25 source={dataset.location}/test/images
+
+下载模型到本地：
+from google.colab import files
+files.download('runs/detect/train/weights/best.pt')
+
+💡 Colab 训练避坑指南：
+ * 连接断开： Colab 免费版可能会因为闲置断开连接。建议训练时不要关闭浏览器页签。
+ * 存储空间： 如果你的数据集非常大，建议挂载 Google Drive：
+   from google.colab import drive
+drive.mount('/content/drive')
+
+   然后将训练结果保存到驱动器，防止 Colab 实例重置导致数据丢失。
+你需要我帮你写一段自动挂载 Google Drive 并保存权重的代码吗？
+
+
