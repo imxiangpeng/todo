@@ -423,3 +423,13 @@ results = model.train(
 您是想在本地电脑训练（需要显卡），还是希望在云端（如 Google Colab）进行免费训练？
 
 
+* TODO Huggingface上预训练抽烟模型
+SCHEDULED: <2026-02-01 Sun>
+
+https://huggingface.co/Enos-123/smoking-detection?hl=zh-CN
+
+
+
+https://mp.weixin.qq.com/s/TZxmp_WvJ86MwSI3YC8cBQ
+
+
