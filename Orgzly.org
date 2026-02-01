@@ -618,3 +618,112 @@ model.train(
 
 
 
+* TODO 动态控制是否显示
+SCHEDULED: <2026-02-02 Mon>
+
+在 RK3588 上使用 GStreamer 实现“推理始终进行，显示可选配置”的需求，最优雅的架构是利用 tee 插件。
+tee 就像一个水管的三通接头，可以将解码后的视频流复制成两路：
+ * 一路去往 appsink：由 C++ 代码拉取 Buffer，送入 RKNN 进行推理。
+ * 一路去往 fakesink 或 waylandsink：通过 valve 插件动态控制开关。
+1. 核心架构设计
+ * mppvideodec: 硬件解码。
+ * tee: 分流。
+ * appsink (分支A): 始终运行，每秒获取 N 帧图像给 RKNN。
+ * valve + waylandsink (分支B): 动态开关。valve 插件有一个 drop 属性，设置为 true 时不消耗性能地丢弃数据，设置为 false 时正常显示。
+2. GStreamer 版本的工厂模式实现
+#include <gst/gst.h>
+#include <iostream>
+#include <string>
+#include <memory>
+
+class GstRknnPlayer {
+private:
+    GstElement *pipeline = nullptr;
+    GstElement *valve = nullptr;    // 用于控制显示开关
+    GstElement *appsink = nullptr;  // 用于拉取推理数据
+    std::string url;
+
+    // 内部回调：appsink 收到数据时触发，进行 RKNN 推理
+    static GstFlowReturn on_new_sample(GstElement *sink, gpointer data) {
+        GstSample *sample;
+        g_signal_emit_by_name(sink, "pull-sample", &sample);
+        if (sample) {
+            // 1. 从 sample 中提取 Buffer
+            GstBuffer *buffer = gst_sample_get_buffer(sample);
+            // 2. 获取内存映射 (通常是 NV12 格式)
+            GstMapInfo map;
+            if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
+                // -----------------------------------------------------
+                // 这里调用你的 RKNN 推理逻辑: rknn_run(map.data)
+                // -----------------------------------------------------
+                gst_buffer_unmap(buffer, &map);
+            }
+            gst_sample_unref(sample);
+        }
+        return GST_FLOW_OK;
+    }
+
+public:
+    bool initialize(const std::string& rtsp_url, const std::string& rect) {
+        this->url = rtsp_url;
+        
+        /* * 构造 Pipeline:
+         * rtspsrc -> decodebin -> tee name=t
+         * t. ! queue ! appsink (推理分支)
+         * t. ! queue ! valve name=v ! waylandsink (显示分支)
+         */
+        std::string pipe_str = 
+            "rtspsrc location=" + url + " protocols=tcp latency=200 ! decodebin ! "
+            "tee name=t "
+            "t. ! queue ! videoconvert ! video/x-raw,format=RGB ! appsink name=mysink emit-signals=true sync=false "
+            "t. ! queue ! valve name=myvalve drop=true ! waylandsink render-rectangle=\"" + rect + "\" sync=false";
+
+        GError *err = nullptr;
+        pipeline = gst_parse_launch(pipe_str.c_str(), &err);
+        
+        if (pipeline) {
+            appsink = gst_bin_get_by_name(GST_BIN(pipeline), "mysink");
+            valve = gst_bin_get_by_name(GST_BIN(pipeline), "myvalve");
+            
+            // 注册推理回调
+            g_signal_connect(appsink, "new-sample", G_CALLBACK(on_new_sample), this);
+            return true;
+        }
+        return false;
+    }
+
+    void start() {
+        if (pipeline) gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    }
+
+    // 动态开关显示函数
+    void setDisplayEnable(bool enable) {
+        if (valve) {
+            // drop=true 停止显示, drop=false 开启显示
+            g_object_set(G_OBJECT(valve), "drop", !enable, NULL);
+            std::cout << "Display " << (enable ? "ON" : "OFF") << " for " << url << std::endl;
+        }
+    }
+
+    void stop() {
+        if (pipeline) {
+            gst_element_set_state(pipeline, GST_STATE_NULL);
+            gst_object_unref(pipeline);
+        }
+    }
+};
+
+3. 为什么 GStreamer 方案在 RK3588 上更有优势？
+ * 硬件链路自动化：
+   decodebin 会自动帮你把 rtspsrc 的数据喂给 mppvideodec。如果你用 waylandsink，GStreamer 内部会处理从 MPP 到屏幕的零拷贝路径（通过 DMABUF），这比 FFmpeg 手动写渲染逻辑要高效得多。
+ * 性能极佳的“动态显示”：
+   使用 valve 插件。当 drop=true 时，显示分支的渲染线程会阻塞在 valve 这里，完全不消耗 GPU 或渲染带宽。而 tee 的另一个分支 appsink 依然在源源不断地给你的 RKNN 喂数据。
+ * 零拷贝推理的可能性：
+   在高级用法中，appsink 获取到的 Buffer 实际上是存储在物理连续内存（CMA）中的。你可以通过插件获取 Buffer 的 FD (File Descriptor)，直接传给 RKNN 的 rknn_create_mem_from_fd 接口，实现从解码到推理的全链路零拷贝。这是 FFmpeg 方案很难简单做到的。
+4. 这种模式的“工厂模式”结构
+你可以根据之前的 FFmpeg 示例，将这个 GstRknnPlayer 封装进 VideoPlayer 抽象基类。
+ * 如果需要极致灵活性（如：在推理后再根据结果决定画不画框）：使用 FFmpeg。
+ * 如果需要极致性能和稳定性（如：多路 RTSP 4K 解码且需要低 CPU 占用）：强烈建议使用 GStreamer + valve + appsink。
+您需要我为您完善这部分代码，加入自动断线重连逻辑，还是您想了解如何实现上述提到的“FD 零拷贝推理”？
+
+
