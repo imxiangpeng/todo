@@ -365,3 +365,61 @@ https://github.com/leafqycc/rknn-cpp-Multithreading
 
 
 
+* TODO 抽烟数据集和训练
+SCHEDULED: <2026-02-01 Sun>
+
+由于原版 COCO 数据集不包含“抽烟”类别，你需要使用针对该任务优化的第三方数据集。目前最主流、效率最高的方式是使用 YOLO (You Only Look Once) 系列模型（如最新的 YOLOv8, YOLOv10 或 YOLO11）。
+以下是为你整理的资源获取及训练全流程指南：
+1. 抽烟数据集获取 (YOLO 格式)
+你可以直接在以下平台下载已经标注好的 YOLO 格式数据集（包含 .txt 标签和 data.yaml 配置文件）：
+ * Roboflow Universe (推荐):
+   * Smoking Detection Dataset: 这里有大量社区贡献的抽烟检测数据集，规模从几百张到上万张不等。搜索 "Smoking" 即可找到。
+   * 优势： 直接提供 YOLOv5/v8/v11 格式下载，省去格式转换麻烦。
+ * Kaggle:
+   * Smoking and Drinking Dataset for YOLO: 包含高质量的抽烟与饮酒行为标注。
+ * Mendeley Data:
+   * Smoker Detection Dataset: 包含约 1120 张图像（吸烟 vs 不吸烟），常用于学术研究。
+2. 模型训练步骤 (以 YOLOv8/v11 为例)
+目前最易用且性能最强的是 Ultralytics 框架。
+第一步：安装环境
+pip install ultralytics
+
+第二步：准备配置文件 (data.yaml)
+如果你从 Roboflow 下载，这个文件会自动生成。内容大致如下：
+path: ../datasets/smoking_data  # 数据集根目录
+train: images/train
+val: images/val
+
+names:
+  0: smoking  # 类别名称
+
+第三步：编写训练脚本
+你可以直接在终端运行，或者写一个简单的 Python 脚本：
+终端运行：
+yolo task=detect mode=train model=yolov8n.pt data=data.yaml epochs=100 imgsz=640
+
+Python 脚本：
+from ultralytics import YOLO
+
+# 1. 加载预训练模型（建议从官方权重开始，收敛更快）
+model = YOLO('yolov8n.pt') 
+
+# 2. 开始训练
+results = model.train(
+    data='data.yaml', 
+    epochs=100, 
+    imgsz=640, 
+    batch=16, 
+    device=0  # 如果有GPU则设为0
+)
+
+3. 训练建议（针对抽烟场景）
+ * 处理小目标： 香烟属于微小物体，建议在训练时将输入分辨率设定为 imgsz=640 甚至更高（如 1280），并考虑使用 YOLOv8-m 或 YOLOv8-l 等稍大一点的模型以提升精度。
+ * 正负样本平衡： 抽烟检测容易误判“手摸嘴巴”或“吃东西”。在数据集中加入一些“手部靠近面部但未吸烟”的负样本图像，能显著降低误报率。
+ * 多任务辅助： 如果只检测“香烟”很难，可以尝试同时检测“人（person）”和“香烟（cigarette）”，通过判断两者距离来确认“抽烟行为”。
+4. 获取现成的预训练模型
+如果你不想从头训练，Hugging Face 上也有一些用户上传的权重：
+ * 搜索 Enos-123/smoking-detection，可以直接加载 best.pt 进行推理。
+您是想在本地电脑训练（需要显卡），还是希望在云端（如 Google Colab）进行免费训练？
+
+
