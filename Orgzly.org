@@ -727,3 +727,10 @@ public:
 您需要我为您完善这部分代码，加入自动断线重连逻辑，还是您想了解如何实现上述提到的“FD 零拷贝推理”？
 
 
+* TODO android 9.0下ping等命令无法正确运行限制
+SCHEDULED: <2026-02-27 Fri>
+
+
+https://mp.weixin.qq.com/s/2eNAxA1ZRRbImL-6LUh_vQ
+
+
